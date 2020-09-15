@@ -1,0 +1,57 @@
+.editor-container {
+    margin: 100px;
+    position: relative;
+    width: 80%;
+    max-width: 80%;
+    height: 90vh;
+    border: 2px solid #0000004a;
+    font-size: 1em;
+}
+
+.editor {
+    width: 100%;
+    height: 100%;
+    font-size: 1em;
+
+}
+.editor:focus {
+
+    outline: none;
+}
+
+.line-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+}
+.line-container > .number-line {
+    width: 5%;
+    background: #0037ff2b;;
+}
+
+.line-container > .content {
+    width: 95%;
+    height: 100%;
+    background: #0000ff30;
+}
+
+.code-line{
+    position: relative;
+    display: block;
+    width: -webkit-fill-available;
+    font-family: 'Consolas, Source Code Pro';
+    border: none;
+    font-size: 15px;
+    background: lightcyan;
+    text-align: left;
+}
+
+.code-line:focus {
+    outline: none;
+}
+
+.cursor {
+    position: absolute;
+    border-left: 1px solid #000;
+    height: 100%;
+}
