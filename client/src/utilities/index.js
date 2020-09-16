@@ -1,7 +1,8 @@
-import { EDITOR_CODE_LINE_HEIGHT } from '../constants/EditorContants'
+import * as Constants from '../constants/EditorContants';
+import * as DS from '../utilities/algorithms';
 export const  getCursorPlacementCordinates = (clickX, clickY, codeLines) => {
 
-    let lineHight = EDITOR_CODE_LINE_HEIGHT,
+    let lineHight = Constants.EDITOR_CODE_LINE_HEIGHT,
     totalLineHight = codeLines.length * lineHight,
     cursorLineNum = Math.ceil(clickY / lineHight),
     totalLines = codeLines.length, lineNumber = 0, inLineDistance = 0;
@@ -44,10 +45,10 @@ export const getLineLengthInPixcel = (codeString, pixelMap) => {
 }
 
 export const generatePixelMap = (fontSize, fontFamily) => {
-    let letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "$", " ", ";", "<", ">", "(", ")", "{", "}", "->", ".", "|", "&", "^", "%", "/", "#", "@", "!", ",", "[", "]", "'", "\"","*", "_", "+", "-"];
+    
     let letterLength = {};
 
-    for (let letter of letters) {
+    for (let letter of Constants.CHAR_KEYS) {
         let span = document.createElement('span');
         span.append(document.createTextNode(letter));
         span.style.fontSize = fontSize + "px";
@@ -55,14 +56,54 @@ export const generatePixelMap = (fontSize, fontFamily) => {
         document.body.append(span);
         letterLength[letter] = span.offsetWidth;
 
-        // hack for space
-        if(letter === " ") {
-            letterLength[" "] = letterLength["a"];
-        }
-        
-        span.remove();
+        //span.remove();
     }
 
+    letterLength[" "] = letterLength["_"];
     console.log("inside, ", letterLength);
     return letterLength;
+}
+
+export const isCharacterKey = (keyCode) => {
+
+    if(keyCode >= Constants.CAPS_OFF_A 
+        && keyCode <= Constants.CAPS_OFF_Z)
+        return true;
+    
+    if(keyCode >= Constants.CAPS_ON_A 
+        && keyCode <= Constants.CAPS_ON_Z)
+        return true;
+
+    if(keyCode >= Constants.DIGITS_START 
+        && keyCode <= Constants.DIGITS_END)
+        return true;
+    
+    // also return true for keys like "-", "=", ".", "/", 
+    return Constants.SYMBOL_KEYS.includes(keyCode);
+}
+
+export const correctCursorPositionAccordingToCodeString = (codeString, currentX, pixelMap) => {
+
+    let charLenghts = Array(codeString.length).fill(0);
+    [...codeString].map((ch, index) => {
+
+        if(ch in pixelMap) {
+            charLenghts[index] = (index == 0) ? pixelMap[ch] : charLenghts[index-1] + pixelMap[ch];
+        } else {
+            console.warn("CODE LINE: ", codeString, " ", ch , " not supported.");
+        }
+
+    });
+    
+    const totalCodeLengthInPixel = charLenghts[charLenghts.length - 1];
+    console.log("charlengths", charLenghts);
+    // find place where we have to insert the cursor
+    let correctedX = DS.binarySearch(charLenghts, currentX);
+    console.log("retuning ", correctedX)
+   
+    
+    return {
+        index: correctedX,
+        pixelVal: charLenghts[correctedX]
+    };
 }

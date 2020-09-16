@@ -1,7 +1,7 @@
 import React from 'react';
 import Cursor from './Cursor';
 import { EDITOR_CODE_LINE_HEIGHT } from '../constants/EditorContants';
-import { getLineLengthInPixcel } from '../utilities/index'
+import * as utils from '../utilities/index'
 
 class CodeLine extends React.Component {
 
@@ -13,7 +13,8 @@ class CodeLine extends React.Component {
             height: EDITOR_CODE_LINE_HEIGHT,
             showCursor: false,
             cursorX: 0,
-            cursorY: 0
+            cursorY: 0,
+            codeStringIndex: 0
 
         };
     }
@@ -25,17 +26,14 @@ class CodeLine extends React.Component {
         let rect = e.target.getBoundingClientRect();
         let x = e.clientX - rect.left,
             y = e.clientY - rect.top,
-            codeLineLength = getLineLengthInPixcel(this.state.text, this.props.pm);
+            codeLineLength = utils.getLineLengthInPixcel(this.state.text, this.props.pm);
 
-
-        if(x > codeLineLength) {
-            x = codeLineLength + 5;
-        }
-
+        let correctedX = utils.correctCursorPositionAccordingToCodeString(this.state.text, x, this.props.pm);
         this.setState({
-            showCursor: true,
-            cursorX: x,
-            cursorY: 0
+          showCursor: true,
+          cursorX: correctedX.pixelVal,
+          codeStringIndex: correctedX.index,
+          cursorY: 0,
         });
 
         console.log("code length is => " , codeLineLength);
@@ -57,37 +55,26 @@ class CodeLine extends React.Component {
         const currentCursorPosition = this.state.cursorX;
         let codeString = this.state.text;
         let offsetX = 0;
-        let sepration = 0;
-        for(const ch of this.state.text) {
+        let sepration = this.state.codeStringIndex;
 
-            if(ch in this.props.pm) {
-                if(offsetX < currentCursorPosition && (offsetX + this.props.pm[ch] > currentCursorPosition)) {
-                    break;
-                }
-                offsetX += this.props.pm[ch];
-                sepration++;
-            }
-        }
-
-        console.log(this.state.text[sepration], ' => seperation ')
+        console.log(sepration, this.state.text[sepration], ' => seperation ')
        
-        let left = codeString.substr(0, sepration),
-            right = codeString.substr(sepration, codeString.length),
+        let left = codeString.substr(0, sepration+1),
+            right = codeString.substr(sepration+1, codeString.length),
             keyCode = e.keyCode || e.which,
             keyPressed = String.fromCharCode(keyCode);
         
 
         console.log('keycode' , keyCode);
-        const usedSymbolCodes = [32, 220, 219, 221, 220, 190, 42, 43, 95, 40, 41, 42, 38, 94, 37, 36, 35, 64, 33];
+        
         console.log(e.shiftKey)
-        if((keyCode >= 65 && keyCode <= 90) 
-            || (keyCode >= 48 && keyCode <= 57)
-            || (e.shiftKey && usedSymbolCodes.includes(keyCode))) {
+        if(utils.isCharacterKey(keyCode)) {
 
             console.log(left, right, 'key pressed => ', String.fromCharCode(e.keyCode));
             this.setState({
                 text: left + keyPressed + right,
-                cursorX: currentCursorPosition + this.props.pm[keyPressed]
+                cursorX: currentCursorPosition + this.props.pm[keyPressed] + .25,
+                codeStringIndex: this.state.codeStringIndex + 1
             });
         }
         else if(keyCode == 32) {
